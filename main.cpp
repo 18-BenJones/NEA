@@ -21,10 +21,10 @@ int main( int argc, char** argv )
         while( SDL_PollEvent( &ev ) )
         {
             if( ( SDL_QUIT == ev.type ) ||
-                ( SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode ) )
+                ( SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode ) ) // exit on escape
             {
                 running = false;
-                break;
+                break; 
             }
         }
 
