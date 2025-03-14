@@ -1,43 +1,138 @@
 #include<SDL2/SDL.h>
 #include<vector>
 
+
+// ------ global variables ------ 
+
+SDL_Window* window;             // SDL object that contains the functionality of the window
+SDL_Renderer* renderer;         // SDL object that contains OpenGL functionality
+bool running;                   // Track the state of the core game loop
+int WIDTH = 800;
+int HEIGHT = 600;
+int board[20][10];
+
+enum colour {                   // gives a colour based of the value stored by the position matricies 
+    lblue,
+    dblue,
+    orange,
+    yellow,
+    green,
+    purple,
+    red
+};
+
+const int shape[7][4][4] = {    // Stores the shapes as a 3D array, using the values of the numbers to store colour
+    {           // I
+                {1,1,1,1},
+                {0,0,0,0},
+                {0,0,0,0},
+                {0,0,0,0}
+    },
+    {           // J
+                {2,0,0,0},
+                {2,2,2,0},
+                {0,0,0,0},
+                {0,0,0,0}
+    },
+    {           // L
+                {0,0,3,0},
+                {3,3,3,0},
+                {0,0,0,0},
+                {0,0,0,0}
+    },
+    {           // O
+                {4,4,0,0},
+                {4,4,0,0},
+                {0,0,0,0},
+                {0,0,0,0}
+    },
+    {           // S
+                {0,5,5,0},
+                {5,5,0,0},
+                {0,0,0,0},
+                {0,0,0,0}
+    },
+    {           // T
+                {0,6,0,0},
+                {6,6,6,0},
+                {0,0,0,0},
+                {0,0,0,0}
+    },
+    {           // Z
+                {7,7,0,0},
+                {0,7,7,0},
+                {0,0,0,0},
+                {0,0,0,0}
+    }
+};
+
+// ------ Functions ------
+
+void wait(){
+
+}
+
+int input(){
+
+        SDL_Event ev;
+        SDL_PollEvent(&ev);
+            if((SDL_QUIT == ev.type) || (SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode)) 
+                {running = false;} // exit on escape
+                else{
+                    switch( ev.type ){
+            case SDL_KEYUP: //DOWN
+                switch(ev.key.keysym.sym) {
+                    case SDLK_LEFT:
+                        return(1);
+                    case SDLK_RIGHT:
+                        return(2);
+                    case SDLK_DOWN:
+                        return(3);
+                    case SDLK_UP:
+                        return(4);
+                    case SDLK_ESCAPE:
+                        running=false;
+                    }
+
+                }
+        
+            }
+}
+
+void update(){
+
+}
+
+void render(){
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(renderer);
+        SDL_RenderPresent(renderer);
+
+}
+
+// ------ Main entrypoint ------
+
 int main( int argc, char** argv )
 {
+    // Init SDL
     SDL_Init( SDL_INIT_EVERYTHING );
-    SDL_Window* window = SDL_CreateWindow("SDL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN );
-    SDL_Renderer* renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
+    window = SDL_CreateWindow("SDL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    const std::vector< SDL_Vertex > verts =
-    {
-        { SDL_FPoint{ 400, 150 }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, },
-        { SDL_FPoint{ 200, 450 }, SDL_Color{ 0, 0, 255, 255 }, SDL_FPoint{ 0 }, },
-        { SDL_FPoint{ 600, 450 }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, },
-    };
-
-    bool running = true;
+    // Game loop
+    running = true;
     while( running )
     {
-        SDL_Event ev;
-        while( SDL_PollEvent( &ev ) )
-        {
-            if( ( SDL_QUIT == ev.type ) ||
-                ( SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode ) ) // exit on escape
-            {
-                running = false;
-                break; 
-            }
-        }
+        wait();
+        input();
+        update();
+        render();
 
-        SDL_SetRenderDrawColor( renderer, 0, 0, 0, SDL_ALPHA_OPAQUE );
-        SDL_RenderClear( renderer );
-        SDL_RenderGeometry( renderer, nullptr, verts.data(), verts.size(), nullptr, 0 );
-        SDL_RenderPresent( renderer );
     }
-
+    // Clearing up after exiting
     SDL_DestroyRenderer( renderer );
     SDL_DestroyWindow( window );
     SDL_Quit();
-
     return 0;
 }
 
