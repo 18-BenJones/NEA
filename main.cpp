@@ -1,7 +1,6 @@
 #include<SDL2/SDL.h>
 #include<vector>
 
-
 // ------ global variables ------ 
 
 SDL_Window* window;             // SDL object that contains the functionality of the window
@@ -11,7 +10,7 @@ int WIDTH = 800;
 int HEIGHT = 600;
 int board[20][10];
 
-enum colour {                   // gives a colour based of the value stored by the position matricies 
+enum colour {                   // gives a colour based of the value stored by the shape matricies 
     lblue,
     dblue,
     orange,
@@ -66,21 +65,20 @@ const int shape[7][4][4] = {    // Stores the shapes as a 3D array, using the va
     }
 };
 
-// ------ Functions ------
+// ------ Game loop Functions ------
 
 void wait(){
 
 }
 
-int input(){
-
-        SDL_Event ev;
-        SDL_PollEvent(&ev);
-            if((SDL_QUIT == ev.type) || (SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode)) 
-                {running = false;} // exit on escape
-                else{
-                    switch( ev.type ){
-            case SDL_KEYUP: //DOWN
+int input(){                    // Handle keyboard input via SDL
+    SDL_Event ev;
+    SDL_PollEvent(&ev);
+    if((SDL_QUIT == ev.type) || (SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode)) 
+        {running = false;}      // exit on escape
+    else{
+        switch(ev.type){
+            case SDL_KEYUP:     // the release of a key
                 switch(ev.key.keysym.sym) {
                     case SDLK_LEFT:
                         return(1);
@@ -92,21 +90,30 @@ int input(){
                         return(4);
                     case SDLK_ESCAPE:
                         running=false;
-                    }
-
                 }
-        
             }
+        }
 }
 
 void update(){
-
+    // preform the game calculations, eg clearing lines or 
 }
 
 void render(){
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
+        //draw the board
+        //draw the current piece
         SDL_RenderPresent(renderer);
+}
+
+// ------ Specific functions ------
+
+void rotate(){  // rotate the current piece
+
+}
+
+void lineclear(){
 
 }
 
@@ -127,8 +134,8 @@ int main( int argc, char** argv )
         input();
         update();
         render();
-
     }
+
     // Clearing up after exiting
     SDL_DestroyRenderer( renderer );
     SDL_DestroyWindow( window );
