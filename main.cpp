@@ -18,9 +18,10 @@ struct boardpos {
 
 struct cur {
     boardpos pos;
-    int piece[4][4];
-    SDL_Color col; 
+    int piece[4][4]; 
 };
+
+cur current = {0, 5,};
 
 const Uint8 colour[7][3] {                   // gives a colour based of the value stored by the shape matricies 
     {173, 216, 230},    // light blue
@@ -77,32 +78,14 @@ const int shape[7][4][4] = {    // Stores the shapes as a 3D array, using the va
     }
 };
 
-// ------ functions ------
-
-int msleep(int msec){   // Sleep for the requested number of milliseconds.   
-    struct timespec tim, tim2;
-    tim.tv_sec = 0;
-    tim.tv_nsec = msec*1000000;
-    nanosleep(&tim , &tim2);
-}
-
-void drawblock(boardpos cpos, SDL_Color col){
-    // This shit broken asf
-    //const SDL_Rect sq = {cpos.x, cpos.y, (20), (20)};
-    const SDL_Rect sq = {50, 50, 200, 200};
-    SDL_SetRenderDrawColor(renderer, col.r, col.g, col.b, 255);
-    SDL_RenderDrawRect(renderer, &sq);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-}
+// ------ Matrix functions ------
 
 void transpose(int* fpntr, int len){
     // Transposes the matrix (swaps elements about the centre)
     int swap;
     for(int i = 0; i < len; i++){
         for(int j = i; j < len; j++){
-            if(i==j) {
-                continue;                                       // ignore central line
-            }
+            if(i==j) {continue;}                                       // ignore central line
             else{
                 swap = *(fpntr + (len*j)+ i);
                 *(fpntr + (len*j)+ i) = *(fpntr + (len*i)+ j);
@@ -164,55 +147,104 @@ void rotate(int* fpntr, int len, bool ccw){
     reverse(fpntr, len, ccw);    
 }
 
-// ------ Game loop Functions ------
-
-int input(SDL_Event ev){                    // Handle keyboard input via SDL
-    if((SDL_QUIT == ev.type) || (SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode)) 
-        {running = false;}      // exit on escape
-    else{
-        switch(ev.type){
-            case SDL_KEYUP:     // the release of a key
-                switch(ev.key.keysym.sym) {
-                    case SDLK_LEFT:
-                        return(1);
-                    case SDLK_RIGHT:
-                        return(2);
-                    case SDLK_DOWN:
-                        return(3);
-                    case SDLK_UP:
-                        return(4);
-                    //case SDLK_ESCAPE:
-                    //    running=false;
-                default:
-                    return(0);
-                }
-            default:
-                return(0);
-            }
-        }
+int distbelow(){
+    // Calculate the available distance below a block
+    return 1;
 }
+
+boardpos lowestpos(){
+    // find the lowest part of the matrix
+    boardpos ret = {0, 0};
+    return ret;
+}
+
+// ------ Drawing functions ------
+
+void drawblock(boardpos cpos, SDL_Color col){
+    // This shit broken asf
+    //const SDL_Rect sq = {cpos.x, cpos.y, (WIDTH/20), (WIDTH/20)};
+    //const SDL_Rect sq = {50, 50, 200, 200};
+}
+
+void tt(){
+    const std::vector< SDL_Vertex > verts =
+    {
+        { SDL_FPoint{ 400, 150 }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, },
+        { SDL_FPoint{ 200, 450 }, SDL_Color{ 0, 0, 255, 255 }, SDL_FPoint{ 0 }, },
+        { SDL_FPoint{ 600, 450 }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, },
+    };
+    SDL_RenderGeometry( renderer, nullptr, verts.data(), verts.size(), nullptr, 0 );
+}
+
+// ------ Game loop Functions ------
 
 void update(int action){
     // preform the game calculations, eg clearing lines moving the current piece etc
     // this shit is also broken af
+    
     switch(action){
         case 0: // apply gravity
-        case 1: // left
+            if (distbelow() >= 1){
+            current.pos.y++;
+            }
+            break;
+            case 1: // left
+            current.pos.x--;
+            break;
         case 2: // right
+            current.pos.x++;
+            break;
         case 3: // hard drop
-        case 4: // rotate 
+            lowestpos(); 
+            break;
+        case 4: // rotate
+            rotate(&current.piece[0][0], 4, 0); 
+            break;
         case 5: // line clear
+            // implement me later
+            break; 
+        default:
+            //do nothing
+            break;
+    }
+}
+void input(SDL_Event ev){                    // Handle keyboard input via SDL
+    if((SDL_QUIT == ev.type) || (SDL_KEYDOWN == ev.type && SDL_SCANCODE_ESCAPE == ev.key.keysym.scancode)) 
+    {running = false;}      // exit on escape
+    else{
+    switch(ev.type){
+        case SDL_KEYUP:     // the release of a key
+            switch(ev.key.keysym.sym) {
+                case SDLK_LEFT:
+                    update(1);
+                    break;
+                case SDLK_RIGHT:
+                    update(2);
+                    break;
+                case SDLK_DOWN:
+                    update(3);
+                    break;
+                case SDLK_UP:
+                    update(4);
+                    break;
+                //case SDLK_ESCAPE:
+                //    running=false;
+            default:
+                return;
+            }
+        default:
+            return;
+        }
     }
 }
 
-void render(){ // this needs to be fixed bcus of drawblock to add functionality
+void draw(){ // this needs to be fixed bcus of drawblock to add functionality
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
-        //draw the board
-        //draw the current piece
-        boardpos tmp = {50, 50};
-        SDL_Color tmpc = {255, 255, 255};
-        drawblock(tmp, tmpc);
+        //boardpos tmp = {50, 50};
+        //SDL_Color tmpc = {255, 255, 255, 255};
+        //drawblock(tmp, tmpc);
+        tt();
         SDL_RenderPresent(renderer);
 }
 
@@ -224,26 +256,28 @@ int main( int argc, char** argv )
     SDL_Init( SDL_INIT_EVERYTHING );
     window = SDL_CreateWindow("SDL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    ///draw black
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);
 
     // Game loop
-    int elapsedsec = 0;
+    int framerate = 60;
     int ticklen = 20;
     SDL_Event ev;
     running = true;
+    ticklen = 100;
+
     while( running )
-    {
-        for(int i = 0; i < ticklen + 1; i++){
-            if(SDL_PollEvent(&ev)){
-                update(input(ev));
-            }
-            msleep(1000/ticklen);
-        }
-        elapsedsec++;
-        update(0);
-        update(5);
-        render();
+    { 
+        //for(int i = 0; i < ticklen + 1; i++){
+            if(SDL_PollEvent(&ev))
+            {input(ev);}
+            update(0);
+            update(5);
+            draw();
+            SDL_Delay(1000/framerate);
     }
-    
+
     // Clearing up after exiting
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
