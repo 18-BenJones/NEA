@@ -35,27 +35,7 @@ struct cur {                                    // Structure that encapsulates t
 SDL_Window* window;                             // SDL object that contains the functionality of the window
 SDL_Renderer* renderer;                         // SDL object that contains OpenGL functionality 
 SDL_Event ev;                                   // SDL object that handles user input
-int board[20][10] = //{0};                        // a 2D matrix that represents the board. Any non-zero value is interpreted as a block
-{{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0},
-{0,2,2,2,2,2,2,2,2,2},
-{0,2,2,2,2,2,2,2,2,2},
-{0,2,2,2,2,2,2,2,2,2},
-{0,2,2,2,2,2,2,2,2,2},};
+int board[20][10] = {0};                        // a 2D matrix that represents the board. Any non-zero value is interpreted as a block
 int piecequeue[7] = {-1,-1,-1,-1,-1,-1,-1};     // stores the indecies of the next 7 pieces to be played 
 const Uint8 colour[7][3] {                      // defines an SDL_Color compatible array based of the value stored by the shape matrices and board[][] 
     {65, 230, 255},     // light blue
@@ -115,7 +95,7 @@ cur current = {3, 0,                            // Represents the current piece
     {0,0,0,0},          // init matrix that gets overridden by the first piece
     {0,0,0,0},
     {0,0,0,0}},
-    0
+    -1
 };
 st state = { true, 0, 1};               // state variable to track the state of the application
 
@@ -296,7 +276,7 @@ bool wishpos(boardpos pos){                     // return true if the current pi
     return true; // valid position 
 }
 
-void lineclear(){                               // checks if any lines need clearing and clears them and adds to the score
+void lineclear(){                               // FIX ME checks if any lines need clearing and clears them and adds to the score
     int linescleared = 0;
     int zerocount = 10;
     for(int i = 20; i > 0; i--){    // greater than 0 skips the top line, which should always be left as zeros
@@ -312,6 +292,7 @@ void lineclear(){                               // checks if any lines need clea
                 }
             }    
             linescleared = linescleared + 1;
+            i = i+1;    // go back up a row in case we dropped a full row
         }
         zerocount = 10;
     }
@@ -506,25 +487,45 @@ void drawboard(){                               // takes the current state of th
     }
 }
 
-/*
-void windowmessage(int time){                   // FIX ME Display game information in the window's text box
-    char t1[64] = "Time:  ";
-    char tm[32] = {0};
-    snprintf(tm, sizeof(tm), "%d", time);
-    snprintf(t1, sizeof(t1), "%s %s", t1, tm);
-    //char t2[50] = "Score:  ";
-    //char t3[50] = "Held:  ";
-    //char text[150] = {0};
-    //snprintf(text, sizeof(text), "%s %s %s", t1, t2, t3);
-    SDL_SetWindowTitle(window, t1);
-}*/
+void windowmessage(){                           // Display game information in the window's text box
+    char text[64] = "";
+    char tmp[32] = "";
+    switch (current.held){
+        case -1:
+            sprintf(tmp, "None");
+            break;
+        case 0:
+            sprintf(tmp, "I");
+            break;
+        case 1:
+            sprintf(tmp, "J");
+            break;
+        case 2:
+            sprintf(tmp, "L");
+            break;
+        case 3:
+            sprintf(tmp, "O");
+            break;
+        case 4:
+            sprintf(tmp, "S");
+            break;
+            case 5:
+            sprintf(tmp, "T");
+        break;
+            case 6:
+            sprintf(tmp, "Z");
+        break;    
+    }
+    sprintf(text, "Score: %d | Held: %s", state.score, tmp);
+    SDL_SetWindowTitle(window, text);
+}
 
 void draw(){                                    // Primary rendering function that handles adding all neccesry geometry to the renderer's queue
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); 
     SDL_RenderClear(renderer);      // Clear the renderer after each frame
     drawgrid();                     // grid first so it gets overdrawn by the blocks
     drawboard();                    // draw the all the blocks
-    //windowmessage();
+    windowmessage();                // Set the window message
     SDL_RenderPresent(renderer);    // tell OpenGL to draw whats in the renders buffer
 }
 
@@ -534,7 +535,7 @@ void game(){                                     // Encloses the game
     // Game initilisation
     srand(time(NULL));                          // seed the random number generator
     int dtime = 0;                              // delta time, used to track realworld time as framerate =/= time
-    float elapsedt = 0;                           // elapsed time, stores the time since the game has started
+    float elapsedt = 0;                         // elapsed time, stores the time since the game has started
 
     refreshqueue();                             // refresh the piecequeue so that there's an available piece
     changepiece(0);                             // choose a piece for the first piece
@@ -555,7 +556,7 @@ void game(){                                     // Encloses the game
             draw();       
 
             if(elapsedt > 200){
-                if(dtime >= 200){                   // max rate of 200 ms
+                if(dtime >= 200){                   // max tick rate of 200 ms
                     movepiece(0);                   // apply gravity 
                     draw();                         // always update screen on ticks
                     elapsedt = elapsedt + dtime/1000;
@@ -584,6 +585,7 @@ void game(){                                     // Encloses the game
 // ------ Main entrypoint ------
 
 int main( int argc, char** argv ){
+        
     // Init SDL
     SDL_Init( SDL_INIT_EVERYTHING );
     window = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);

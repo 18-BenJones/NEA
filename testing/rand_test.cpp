@@ -2,6 +2,8 @@
 #include<stdlib.h>
 #include<time.h>
 
+// test the efficacy of the rand() function
+
 int main(){
     srand(time(NULL));
     float sum = 0;
